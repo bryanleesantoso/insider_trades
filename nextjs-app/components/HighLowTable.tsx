@@ -4,7 +4,6 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { DataTable } from "@/components/DataTable";
 import type { ColumnDef } from "@tanstack/react-table";
 
-// Interface to match the route2.js response structure
 interface StockMover {
   stockName: string;
   price: number;
@@ -14,8 +13,6 @@ interface StockMover {
   category: string;
   date: string;
 }
-
-// Custom header component with hover effect (same as InsiderTable)
 const SortableHeader = ({ column, children }: { column: any, children: React.ReactNode }) => {
   const [isHovered, setIsHovered] = useState(false);
   
@@ -64,12 +61,9 @@ const HighLowTable = () => {
         }
         
         const result = await response.json();
-        
-        // Handle the data format from the API
+        console.log(result)
         const stockDataArray = Array.isArray(result.otherData) ? result.otherData : [];
         setStockData(stockDataArray);
-        
-        // Set last updated date if available
         if (result.metadata && result.metadata.length > 0) {
           setLastUpdated(result.metadata[0].lastUpdated);
         }
@@ -78,20 +72,48 @@ const HighLowTable = () => {
         console.error('Failed to fetch stock data:', error);
         setError(`Failed to load stock data: ${error.message}`);
       } finally {
+        
         setIsLoading(false);
       }
     };
 
     fetchStockData();
   }, []);
-
-  // Filter data based on selected category
   useEffect(() => {
+    console.log('🔍 Filtering Debug:', {
+      selectedCategory,
+      totalData: stockData.length,
+      availableCategories: [...new Set(stockData.map(s => s.category))],
+      sampleData: stockData.slice(0, 3).map(s => ({ stockName: s.stockName, category: s.category }))
+    });
+    
     if (selectedCategory === 'all') {
       setFilteredData(stockData);
+      console.log('✅ Showing all data:', stockData.length);
     } else {
-      const filtered = stockData.filter(stock => stock.category.toLowerCase() === selectedCategory.toLowerCase());
+      const filtered = stockData.filter(stock => {
+        const stockCategory = stock.category.toLowerCase();
+        const selectedCat = selectedCategory.toLowerCase();
+        let match = false;
+        
+        if (selectedCat === 'gainer') {
+          match = stockCategory.includes('gainer') || stockCategory.includes('gain');
+        } else if (selectedCat === 'loser') {
+          match = stockCategory.includes('loser') || stockCategory.includes('lose');
+        } else if (selectedCat === 'active') {
+          match = stockCategory.includes('active') || stockCategory.includes('most_active');
+          match = stockCategory === selectedCat;
+        }
+        
+        console.log(`Comparing: "${stockCategory}" with "${selectedCat}" = ${match}`);
+        return match;
+      });
       setFilteredData(filtered);
+      console.log('✅ Filtered results:', {
+        category: selectedCategory,
+        filteredCount: filtered.length,
+        originalCount: stockData.length
+      });
     }
   }, [stockData, selectedCategory]);
 
@@ -180,15 +202,21 @@ const HighLowTable = () => {
       ),
       cell: ({ row }) => {
         const category = row.getValue<string>("category");
+        
+        // Helper function for title case
+        const toTitleCase = (str: string): string => {
+          return str.toLowerCase().replace(/\b\w/g, (l: string) => l.toUpperCase());
+        };
+        
         return (
           <span
             className={
-              category.toLowerCase() === "gainer" ? "text-green-600 font-medium" : 
-              category.toLowerCase() === "loser" ? "text-red-600 font-medium" : 
+              category.toLowerCase().includes("gainer") || category.toLowerCase().includes("gain") ? "text-green-600 font-medium" : 
+              category.toLowerCase().includes("loser") || category.toLowerCase().includes("lose") ? "text-red-600 font-medium" : 
               "text-blue-600 font-medium"
             }
           >
-            {category}
+            {toTitleCase(category)}
           </span>
         );
       },
@@ -216,22 +244,28 @@ const HighLowTable = () => {
     },
   ], []);
 
-  // Add useEffect for smooth scrolling when hash changes
   useEffect(() => {
-    // Check if there's a hash in the URL when component mounts
     if (window.location.hash === '#stock-movers-table') {
       setTimeout(() => {
         const element = document.getElementById('stock-movers-table');
         if (element) {
           element.scrollIntoView({ behavior: 'smooth' });
         }
-      }, 100); // Small timeout to ensure the component is fully rendered
+      }, 100);
     }
   }, []);
 
   return (
     <div id="stock-movers-table">
-      {/* Category Filter Buttons */}
+      <h2 style={{
+        fontSize: '1.5rem',
+        fontWeight: 'bold',
+        fontFamily: 'Helvetica, Arial, sans-serif',
+        margin: '0 0 1rem 0',
+        textAlign: 'center',
+      }}>
+        Stock Market Movers
+      </h2>
       <div style={{
         display: 'flex',
         justifyContent: 'center',
@@ -270,8 +304,6 @@ const HighLowTable = () => {
           </button>
         ))}
       </div>
-
-      {/* Last Updated Info */}
       {lastUpdated && (
         <div style={{
           textAlign: 'center',
@@ -295,11 +327,12 @@ const HighLowTable = () => {
         data={filteredData}
         isLoading={isLoading}
         error={error}
-        pageSize={15}
-        tableTitle="Stock Market Movers"
-        tableDescription={`Showing ${selectedCategory === 'all' ? 'all stock movers' : `${selectedCategory}s only`}. Click the buttons above to filter by category.`}
+        pageSize={10}
+        tableDescription={'This table shows the latest stock market movers. 3 main categories include, gainers, losers, and most active stocks. The following information can help in deducing the most profitable, active, and high risk trades. Click the buttons above to filter by category.'}
         showSearch={true}
       />
+
+      
     </div>
   );
 };
