@@ -3,6 +3,7 @@ import NavBar from "@/components/navBar";
 import Welcome from "@/components/Welcome";
 import InsiderTable from "@/components/InsiderTable";
 import ProgressBanner from "@/components/ProgressBanner";
+import HighLowTable from "@/components/HighLowTable";
 
 export default function Home() {
   return (
@@ -12,6 +13,7 @@ export default function Home() {
       <Welcome></Welcome>
       <div id="insider-transactions-anchor" style={{position: 'relative', padding: '0.8 rem', height: '20px', width: '100%'}}></div>
       <InsiderTable></InsiderTable>
+      <HighLowTable></HighLowTable>
     </div>
   );
 }

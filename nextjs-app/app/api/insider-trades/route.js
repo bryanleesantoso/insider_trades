@@ -27,7 +27,6 @@ export async function GET() {
         maximumFractionDigits: 2
       })}`
     }));
-    
     return NextResponse.json({ data: formattedData });
   } catch (error) {
     console.error('Supabase query error:', error);

@@ -79,7 +79,10 @@ export function DataTable<TData, TValue>({
   const cellStyles = {
     fontFamily: 'Helvetica, Arial, sans-serif',
     border: '1px solid #e0e0e0',
-    padding: '12px'
+    paddingLeft: '8px',
+    paddingRight: '8px',
+    paddingTop: '12px',
+    paddingBottom: '12px',
   };
 
   const headerCellStyles = {
